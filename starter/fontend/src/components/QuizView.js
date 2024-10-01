@@ -22,7 +22,7 @@ class QuizView extends Component {
 
   componentDidMount(){
     $.ajax({
-      url: `/categories`, //TODO: update request URL
+      url: `/api/v1.0/categories`,
       type: "GET",
       success: (result) => {
         this.setState({ categories: result.categories })
@@ -33,8 +33,10 @@ class QuizView extends Component {
     })
   }
 
-  selectCategory = ({type, id=0}) => {
-    this.setState({quizCategory: {type, id}}, this.getNextQuestion)
+  selectCategory = ({type, id}) => {
+  if(id){
+       this.setState({quizCategory: {type, id}}, this.getNextQuestion)}
+  else {this.setState({quizCategory: {}}, this.getNextQuestion)}
   }
 
   handleChange = (event) => {
@@ -46,7 +48,7 @@ class QuizView extends Component {
     if(this.state.currentQuestion.id) { previousQuestions.push(this.state.currentQuestion.id) }
 
     $.ajax({
-      url: '/quizzes', //TODO: update request URL
+      url: `/api/v1.0/quizzes`,
       type: "POST",
       dataType: 'json',
       contentType: 'application/json',
@@ -62,9 +64,9 @@ class QuizView extends Component {
         this.setState({
           showAnswer: false,
           previousQuestions: previousQuestions,
-          currentQuestion: result.question,
+          currentQuestion: result,
           guess: '',
-          forceEnd: result.question ? false : true
+          forceEnd: result ? false : true
         })
       },
       error: (error) => {

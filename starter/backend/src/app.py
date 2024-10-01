@@ -1,14 +1,13 @@
-from starter.backend.src.config import config, CONFIG_MODE
+from starter.backend.src.config import Config
 from starter.backend.src.models import setup_db
 from starter.backend.src.flaskr import app
+
+config = Config()
 
 
 def create_app():
     """Application-factory pattern"""
-    config_mode = config[CONFIG_MODE]
-    app.config.from_object(config_mode)
-    setup_db(app, config_mode)
-
+    setup_db(app, config)
     return app
 
 

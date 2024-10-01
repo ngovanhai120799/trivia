@@ -27,12 +27,14 @@ def after_request(response):
 @app.route('/api/v1.0/questions', methods=['GET'])
 @cross_origin()
 def get_questions():
-    page = request.args.get('pages', 1, int)
+    page = request.args.get('page', 1, int)
     row_to_skip = (page - 1) * QUESTIONS_PER_PAGE
     # Get all questions
-    query_result = Question.query.limit(QUESTIONS_PER_PAGE).offset(row_to_skip)
+    query_result = Question.query
+    questions = query_result.limit(QUESTIONS_PER_PAGE).offset(row_to_skip)
+    categories = get_all_categories()
 
-    page_result = page_result_json(list(query_result))
+    page_result = page_result_json(list(questions), categories=categories, total_questions=query_result.count())
     return page_result
 
 
@@ -41,7 +43,8 @@ def get_questions():
 @cross_origin()
 def get_categories():
     categories = get_all_categories()
-    return jsonify(categories)
+    page_result = page_result_json(questions=[], categories=categories)
+    return page_result
 
 
 # 4. Create an endpoint to DELETE question using a question ID.
@@ -50,6 +53,11 @@ def get_categories():
 def create_questions():
     try:
         request_body = request.get_json()
+        # if search_term is not None, get question contains search_term, else create new question base on body request
+        search_term = request_body.get('searchTerm')
+        if search_term:
+            return search_question(search_term)
+
         question = request_body.get('question')
         answer = request_body.get('answer')
         category = request_body.get('category')
@@ -77,22 +85,11 @@ def delete_question(question_id):
 
 
 # 6. Create a POST endpoint to get questions based on category.
-@app.route('/api/v1.0/categories/<int:category_id>/questions', methods=['POST'])
+@app.route('/api/v1.0/categories/<int:category_id>/questions', methods=['GET'])
 @cross_origin()
 def get_question_by_category_id(category_id):
     category = Category.query.get_or_404(category_id)
     page_result = page_result_json(category.questions, category.format(), None)
-    return page_result
-
-
-# 7. Create a POST endpoint to get questions based on a search term.
-@app.route('/api/v1.0/questions/search', methods=['POST'])
-@cross_origin()
-def search_question():
-    search_term = request.get_json().get('searchTerm')
-    query_result = Question.query.filter(Question.question.contains(search_term))
-
-    page_result = page_result_json(list(query_result))
     return page_result
 
 
@@ -101,13 +98,11 @@ def search_question():
 @cross_origin()
 def play_quiz():
     request_body = request.get_json()
-    previous_questions: List[dict] = request_body.get('previous_questions', [])
+    previous_questions: List[int] = request_body.get('previous_questions', [])
     quiz_category: dict = request_body.get('quiz_category', {})
 
-    previous_question_ids = [q['id'] for q in previous_questions]
-
     # Get random question within the given category if provided
-    question = Question.query.filter(Question.id.notin_(previous_question_ids))
+    question = Question.query.filter(Question.id.notin_(previous_questions))
     if quiz_category:
         question = question.filter(Question.category == quiz_category['id'])
     question = question.order_by(func.random()).first()
@@ -122,11 +117,18 @@ def get_all_categories():
     return categories
 
 
-def page_result_json(questions: List[Question], current_category: Optional[dict] = None,
-                     categories: Optional[dict] = None):
+# 7. Create a POST endpoint to get questions based on a search term.
+def search_question(search_term: str):
+    query_result = Question.query.filter(Question.question.contains(search_term))
+    page_result = page_result_json(list(query_result))
+    return page_result
+
+
+def page_result_json(questions: List[Question], current_category: Optional[str] = None,
+                     categories: Optional[dict] = None, total_questions: int = 0):
     return jsonify({
         'questions': [q.format() for q in questions] if questions else [],
-        'total_questions': len(questions),
+        'total_questions': total_questions,
         'categories': categories,
         'current_category': current_category
     })

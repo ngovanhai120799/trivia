@@ -35,7 +35,7 @@ class Question(db.Model):
     answer = Column(String)
     category = Column(Integer, db.ForeignKey('categories.id'))
     difficulty = Column(Integer)
-    categories = db.relationship('Category', backref='questions', lazy='joined', cascade="all")
+    categories = db.relationship('Category', backref='questions', lazy='joined')
 
     def __init__(self, question, answer, category, difficulty):
             self.question = question
