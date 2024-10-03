@@ -87,7 +87,7 @@ def delete_question(question_id):
 
 
 # 6. Create a POST endpoint to get questions based on category.
-@api.route('/categories/<int:category_id>/questions', methods=['GET'])
+@api.route('/categories/<int:category_id>/questions', methods=['POST'])
 @cross_origin()
 def get_question_by_category_id(category_id):
     category = Category.query.get_or_404(category_id)
@@ -147,9 +147,10 @@ def resource_internal_server_error(e):
 # 7. Create a POST endpoint to get questions based on a search term.
 def search_question(search_term: str):
     query_result = Question.query.filter(Question.question.contains(search_term))
+    categories: dict = get_all_categories()
     if not query_result:
         abort(404, f"Resource not found with search_term: {search_term}")
-    page_result = page_result_json(list(query_result))
+    page_result = page_result_json(query_result, None, categories, total_questions=query_result.count())
     return page_result
 
 
