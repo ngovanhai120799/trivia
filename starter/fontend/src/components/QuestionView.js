@@ -60,7 +60,7 @@ class QuestionView extends Component {
   getByCategory= (id) => {
     $.ajax({
       url: `/api/v1.0/categories/${id}/questions`,
-      type: "GET",
+      type: "POST",
       success: (result) => {
         this.setState({
           questions: result.questions,
