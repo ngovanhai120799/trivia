@@ -1,12 +1,13 @@
+
 from sqlalchemy import Column, String, Integer
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
 
-def setup_db(app, config):
-    app.config["SQLALCHEMY_DATABASE_URI"] = config.SQLALCHEMY_DATABASE_URI
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = config.SQLALCHEMY_TRACK_MODIFICATIONS
+def setup_db(app, sqlalchemy_database_uri):
+    app.config["SQLALCHEMY_DATABASE_URI"] = sqlalchemy_database_uri
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.app = app
     db.init_app(app)
 

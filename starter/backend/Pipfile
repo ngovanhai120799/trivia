@@ -12,6 +12,7 @@ jinja2 = "*"
 psycopg2-binary = "*"
 werkzeug = "*"
 python-dotenv = "*"
+flask-testing = "*"
 
 [requires]
 python_version = "3.12"

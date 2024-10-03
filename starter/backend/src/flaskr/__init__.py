@@ -1,54 +1,56 @@
-import logging
 from typing import List, Optional
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, abort, Blueprint
 from flask_cors import CORS, cross_origin
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql import func
 
 from starter.backend.src.models import Category, Question, db
-
-app = Flask(__name__)
-cors = CORS(app, resources={r"/api/v1.0/*": {"origins": "*"}})
 QUESTIONS_PER_PAGE = 10
 
 '''ToDo Tasks'''
+api = Blueprint('api', __name__, url_prefix='/api/v1.0/')
 
 
 # 1. Use Flask-CORS to enable cross-domain requests and set response headers.
-@app.after_request
+@api.after_request
 def after_request(response):
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
     response.headers.add('Access-Control-Allow-Headers', 'GET, POST, PATCH, DELETE, OPTIONS')
     return response
 
-
 # 2. Create an endpoint to handle GET requests for questions, including pagination (every 10 questions)
-@app.route('/api/v1.0/questions', methods=['GET'])
+@api.route('/questions', methods=['GET'])
 @cross_origin()
 def get_questions():
-    page = request.args.get('page', 1, int)
-    row_to_skip = (page - 1) * QUESTIONS_PER_PAGE
-    # Get all questions
-    query_result = Question.query
-    questions = query_result.limit(QUESTIONS_PER_PAGE).offset(row_to_skip)
-    categories = get_all_categories()
+    try:
+        page = request.args.get('page', 1, int)
+        row_to_skip = (page - 1) * QUESTIONS_PER_PAGE
+        # Get all questions
+        query_result = Question.query
+        questions = query_result.limit(QUESTIONS_PER_PAGE).offset(row_to_skip)
+        categories = get_all_categories()
 
-    page_result = page_result_json(list(questions), categories=categories, total_questions=query_result.count())
-    return page_result
+        page_result = page_result_json(list(questions), categories=categories, total_questions=query_result.count())
+        return page_result
+    except SQLAlchemyError as err:
+        abort(400, f'Get ALL questions fail: {err}')
 
 
 # 3. Create an endpoint to handle GET requests for all available categories.
-@app.route('/api/v1.0/categories', methods=['GET'])
+@api.route('/categories', methods=['GET'])
 @cross_origin()
 def get_categories():
-    categories = get_all_categories()
-    page_result = page_result_json(questions=[], categories=categories)
-    return page_result
+    try:
+        categories = get_all_categories()
+        page_result = page_result_json(questions=[], categories=categories)
+        return page_result
+    except SQLAlchemyError as err:
+        abort(400, f'Get ALL questions fail: {err}')
 
 
 # 4. Create an endpoint to DELETE question using a question ID.
-@app.route('/api/v1.0/questions', methods=['POST'])
+@api.route('/questions', methods=['POST'])
 @cross_origin()
 def create_questions():
     try:
@@ -67,12 +69,12 @@ def create_questions():
         question.insert()
         return jsonify({'status_code': 200})
     except SQLAlchemyError as err:
-        logging.info(f'Create question fail: {err}')
         db.session.rollback()
+        abort(400, f'Create question fail: {err}')
 
 
 # 5.Create an endpoint to DELETE question using a question ID.
-@app.route('/api/v1.0/questions/<int:question_id>', methods=['DELETE'])
+@api.route('/questions/<int:question_id>', methods=['DELETE'])
 @cross_origin()
 def delete_question(question_id):
     try:
@@ -80,21 +82,25 @@ def delete_question(question_id):
         question.delete()
         return jsonify({'status_code': 200})
     except SQLAlchemyError as err:
-        logging.info(f'Delete question fail: {err}')
         db.session.rollback()
+        abort(400, f'Delete question fail: {err}')
 
 
 # 6. Create a POST endpoint to get questions based on category.
-@app.route('/api/v1.0/categories/<int:category_id>/questions', methods=['GET'])
+@api.route('/categories/<int:category_id>/questions', methods=['GET'])
 @cross_origin()
 def get_question_by_category_id(category_id):
     category = Category.query.get_or_404(category_id)
-    page_result = page_result_json(category.questions, category.format(), None)
+    questions = category.questions
+    current_category: str = category.type
+    categories: dict = get_all_categories()
+    total_questions: int = len(questions)
+    page_result = page_result_json(questions, current_category, categories, total_questions)
     return page_result
 
 
 # 8. Create a POST endpoint to get questions to play the quiz
-@app.route('/api/v1.0/quizzes', methods=['POST'])
+@api.route('/quizzes', methods=['POST'])
 @cross_origin()
 def play_quiz():
     request_body = request.get_json()
@@ -109,17 +115,40 @@ def play_quiz():
     return jsonify(question.format()) if question else {}
 
 
-def get_all_categories():
+def get_all_categories() -> dict:
     query_result = Category.query.all()
-    categories = {}
+    categories: dict = {}
     for category in query_result:
         categories[category.id] = category.type
     return categories
 
 
+# 9. Create error handlers for all expected errors including 400, 404, 422 and 500.
+@api.errorhandler(400)
+def resource_bad_request(e):
+    return get_response_json_error(400, f'Bad Request: {str(e)}')
+
+
+@api.errorhandler(404)
+def resource_not_found(e):
+    return get_response_json_error(404, f'Resource not found: {str(e)}')
+
+
+@api.errorhandler(422)
+def resource_unprocessable(e):
+    return get_response_json_error(422, f'Unprocessable Exception: {str(e)}')
+
+
+@api.errorhandler(500)
+def resource_internal_server_error(e):
+    return get_response_json_error(500, f'Internal Server Error Exception: {str(e)}')
+
+
 # 7. Create a POST endpoint to get questions based on a search term.
 def search_question(search_term: str):
     query_result = Question.query.filter(Question.question.contains(search_term))
+    if not query_result:
+        abort(404, f"Resource not found with search_term: {search_term}")
     page_result = page_result_json(list(query_result))
     return page_result
 
@@ -132,3 +161,11 @@ def page_result_json(questions: List[Question], current_category: Optional[str] 
         'categories': categories,
         'current_category': current_category
     })
+
+
+def get_response_json_error(status_code: int, message: str):
+    return jsonify({
+        'success': False,
+        'error': status_code,
+        'message': message
+    }), status_code

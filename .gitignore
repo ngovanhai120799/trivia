@@ -2,7 +2,7 @@
 __pycache__
 venv
 .idea
-*.iml
+trivia.iml
 starter/backend/.env
 
 # OS generated files #

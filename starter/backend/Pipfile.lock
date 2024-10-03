@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "d649f6c988891f1a1f7c9bf2de41efc04249799b809e70377553445b96d4562d"
+            "sha256": "380d4f2ceb2546813010f666c08887b6c071c224ad207d73c2ca01e5f22ad61b"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -81,6 +81,13 @@
             "markers": "python_version >= '3.8'",
             "version": "==3.1.1"
         },
+        "flask-testing": {
+            "hashes": [
+                "sha256:0a734d7b68e63a9410b413cd7b1f96456f9a858bd09a6222d465650cc782eb01"
+            ],
+            "index": "pypi",
+            "version": "==0.8.1"
+        },
         "greenlet": {
             "hashes": [
                 "sha256:0153404a4bb921f0ff1abeb5ce8a5131da56b953eda6e14b88dc6bbc04d2049e",
@@ -157,7 +164,7 @@
                 "sha256:f406b22b7c9a9b4f8aa9d2ab13d6ae0ac3e85c9a809bd590ad53fed2bf70dc79",
                 "sha256:f6ff3b14f2df4c41660a7dec01045a045653998784bf8cfcb5a525bdffffbc8f"
             ],
-            "markers": "python_version < '3.13' and platform_machine == 'aarch64' or (platform_machine == 'ppc64le' or (platform_machine == 'x86_64' or (platform_machine == 'amd64' or (platform_machine == 'AMD64' or (platform_machine == 'win32' or platform_machine == 'WIN32')))))",
+            "markers": "python_version < '3.13' and (platform_machine == 'aarch64' or (platform_machine == 'ppc64le' or (platform_machine == 'x86_64' or (platform_machine == 'amd64' or (platform_machine == 'AMD64' or (platform_machine == 'win32' or platform_machine == 'WIN32'))))))",
             "version": "==3.1.1"
         },
         "itsdangerous": {
@@ -343,7 +350,7 @@
                 "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926",
                 "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"
             ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2'",
             "version": "==1.16.0"
         },
         "sqlalchemy": {
