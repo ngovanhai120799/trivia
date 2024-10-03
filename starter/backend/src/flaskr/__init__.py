@@ -112,7 +112,7 @@ def play_quiz():
     if quiz_category:
         question = question.filter(Question.category == quiz_category['id'])
     question = question.order_by(func.random()).first()
-    return jsonify(question.format()) if question else {}
+    return jsonify({"question": question.format()}) if question else {}
 
 
 def get_all_categories() -> dict:
@@ -148,9 +148,10 @@ def resource_internal_server_error(e):
 def search_question(search_term: str):
     query_result = Question.query.filter(Question.question.contains(search_term))
     categories: dict = get_all_categories()
+    current_category = query_result.first().categories.type
     if not query_result:
         abort(404, f"Resource not found with search_term: {search_term}")
-    page_result = page_result_json(query_result, None, categories, total_questions=query_result.count())
+    page_result = page_result_json(query_result, current_category, categories, query_result.count())
     return page_result
 
 

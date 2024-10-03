@@ -154,10 +154,12 @@
 * Returns: A random questions within the given category, if provided, and that is not one of the previous questions.
 ```
 {
-    "answer": "Alexander Fleming",
-    "category": 1,
-    "difficulty": 3,
-    "id": 21,
-    "question": "Who discovered penicillin?"
+    "question": {
+        "answer": "Blood",
+        "category": 1,
+        "difficulty": 4,
+        "id": 22,
+        "question": "Hematology is a branch of medicine involving the study of what?"
+    }
 }
 ```
